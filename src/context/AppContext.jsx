@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { BERRY_CAPACITY, BERRY_COOLDOWN } from '../utils/berryForage';
 
 const STORAGE_KEY = 'pokemon-safari-state-v1';
 const starterInventory = { pokeball: 12, superball: 5, bayas: 4 };
@@ -11,6 +12,9 @@ const emptyState = {
   estadisticas: { exploraciones: 0, intentos: 0, capturas: 0 },
   historial: [],
   zonasVisitadas: [],
+  pasosPorRegion: {},
+  arbustos: {},
+  estadisticasBayas: { intentos: 0, exitos: 0, recolectadas: 0 },
 };
 
 function readState() {
@@ -27,6 +31,9 @@ function readState() {
         capturados: Array.isArray(saved.capturados) ? saved.capturados : [],
         historial: Array.isArray(saved.historial) ? saved.historial : [],
         zonasVisitadas: Array.isArray(saved.zonasVisitadas) ? saved.zonasVisitadas : [],
+        pasosPorRegion: saved.pasosPorRegion && typeof saved.pasosPorRegion === 'object' ? saved.pasosPorRegion : {},
+        arbustos: saved.arbustos && typeof saved.arbustos === 'object' ? saved.arbustos : {},
+        estadisticasBayas: { ...emptyState.estadisticasBayas, ...(saved.estadisticasBayas || {}) },
       };
     }
     const legacy = JSON.parse(localStorage.getItem('favoritos') || '[]');
@@ -73,6 +80,38 @@ export function AppProvider({ children }) {
     },
   }));
 
+  const registrarPaso = (regionId) => setState((previous) => ({
+    ...previous,
+    pasosPorRegion: {
+      ...previous.pasosPorRegion,
+      [regionId]: (previous.pasosPorRegion[regionId] || 0) + 1,
+    },
+  }));
+
+  // Failed attempts deplete the bush too. Regrowth is based on valid movement
+  // in that region, not real-world time or reloading the page.
+  const registrarRecoleccion = ({ regionId, bush, success, reward = 0 }) => {
+    setState((previous) => {
+      const current = previous.pasosPorRegion[regionId] || 0;
+      const readyAt = previous.arbustos[bush.id]?.readyAt || 0;
+      if (current < readyAt) return previous;
+      const accepted = success && previous.inventario.bayas < BERRY_CAPACITY;
+      const gained = accepted ? Math.min(Math.max(0, reward), BERRY_CAPACITY - previous.inventario.bayas) : 0;
+      return {
+        ...previous,
+        inventario: { ...previous.inventario, bayas: previous.inventario.bayas + gained },
+        arbustos: { ...previous.arbustos, [bush.id]: {
+          readyAt: current + BERRY_COOLDOWN[bush.kind],
+        } },
+        estadisticasBayas: {
+          intentos: previous.estadisticasBayas.intentos + 1,
+          exitos: previous.estadisticasBayas.exitos + (accepted ? 1 : 0),
+          recolectadas: previous.estadisticasBayas.recolectadas + gained,
+        },
+      };
+    });
+  };
+
   const registrarIntento = ({ pokemon, exito, region, ball, usoBaya }) => {
     setState((previous) => {
       if (previous.inventario[ball] < 1 || (usoBaya && previous.inventario.bayas < 1)) {
@@ -108,7 +147,7 @@ export function AppProvider({ children }) {
       if (previous.inventario.pokeball + previous.inventario.superball > 0) return previous;
       return {
         ...previous,
-        inventario: { pokeball: 8, superball: 2, bayas: previous.inventario.bayas + 2 },
+        inventario: { pokeball: 8, superball: 2, bayas: previous.inventario.bayas },
       };
     });
   };
@@ -123,7 +162,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       ...state, toggleFavorito, registrarExploracion, registrarIntento,
-      reabastecer, setNombre, resetProgreso,
+      reabastecer, registrarPaso, registrarRecoleccion, setNombre, resetProgreso,
     }}>
       {children}
     </AppContext.Provider>

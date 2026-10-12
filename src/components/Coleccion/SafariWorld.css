@@ -63,3 +63,35 @@
 @media(max-width:960px){.field-layout{grid-template-columns:1fr}.field-hud{display:grid;grid-template-columns:1fr 200px;gap:9px 20px;align-items:start}.field-hud-title,.field-notice,.field-keyboard-info,.field-hint,.field-return-button{grid-column:1}.field-dpad{grid-column:2;grid-row:1 / span 5;align-self:center}}
 @media(max-width:580px){.field-toolbar{padding:12px;align-items:flex-start;flex-wrap:wrap}.field-heading h3{font-size:17px}.field-details{font-size:10px}.field-hud{display:flex;padding:13px}.field-dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,45px)}.field-world-corner{font-size:6px;letter-spacing:.5px;padding:4px}.field-avatar-hat,.field-avatar-shirt,.field-avatar-face,.field-avatar-bag{border-width:1px}.field-avatar-hat:after{height:3px;bottom:-3px;border-width:1px}}
 @media(prefers-reduced-motion:reduce){.field-avatar{transition:none}}
+
+
+/* Collectable berry plants and precision challenge */
+.field-bush{position:absolute;z-index:4;display:grid;place-items:center;transform:translate(-50%,-50%);width:6.667%;height:9.091%;border:0;background:none;padding:0;filter:drop-shadow(0 2px 2px #183c27b9);transition:transform .14s,filter .14s}
+.field-bush>span{font-size:clamp(13px,2.3vw,27px);line-height:1;animation:forage-sway 1.9s ease-in-out infinite alternate}
+.field-bush--rare>span{filter:drop-shadow(0 0 5px #ffe875);animation:forage-gold 1.3s ease-in-out infinite alternate}
+.field-bush--near{outline:2px dashed #fff8c0;outline-offset:0;border-radius:50%}
+.field-bush:hover:not(:disabled){transform:translate(-50%,-54%) scale(1.18)}
+.field-bush--empty>span{filter:grayscale(.7);opacity:.78;animation:none}
+.field-bush:disabled{cursor:default}
+.field-harvest-action{width:100%;background:#388868;color:white;border:0;border-radius:12px;padding:13px 9px;font-weight:900;font-size:11px;animation:forage-cta 1.3s ease-in-out infinite alternate}
+.forage-game{background:white;border:1px solid #cbdcce;border-radius:13px;padding:15px 11px;box-shadow:0 7px 18px #113b3112}
+.forage-header{display:flex;align-items:center;justify-content:space-between;gap:5px;color:#2c7055;font-size:10px;font-weight:900}
+.forage-game p,.forage-outcome p{color:#67816f;line-height:1.6;font-size:11px;margin:12px 0}
+.forage-meter{position:relative;height:35px;background:repeating-linear-gradient(90deg,#e7eff0 0 3px,#eff4ee 3px 12px);border:2px solid #a7c6b8;border-radius:9px;margin:24px 0 7px;overflow:visible}
+.forage-target{position:absolute;top:0;bottom:0;background:#62cb88;box-shadow:inset 0 0 0 2px #3f9c67;border-radius:4px}
+.forage-needle{position:absolute;top:-9px;height:49px;width:4px;border-radius:3px;background:#f55e60;box-shadow:0 0 0 2px white,0 3px 8px #631b2b73;transform:translateX(-2px)}
+.forage-needle:before{content:'▼';font-size:12px;position:absolute;left:-4px;top:-15px;color:#f05258}
+.forage-status{display:flex;justify-content:space-between;color:#6d8274;font-weight:800;font-size:10px;gap:8px}
+.forage-stop-button{width:100%;background:#235f50;color:white;border:none;border-radius:10px;font-size:11px;font-weight:900;padding:14px 8px;margin-top:17px;display:flex;justify-content:center;align-items:center;gap:8px}
+.forage-stop-button small{color:#b7e3c9;font-size:9px}
+.forage-abandon{display:block;margin:9px auto 0;background:transparent;border:0;color:#b27162;font-size:10px;font-weight:700;text-decoration:underline}
+.forage-outcome{text-align:center;border:1px solid #d3e9d9;background:#eff7ee;padding:22px 12px;border-radius:12px}
+.forage-outcome--fail{border-color:#efd5c8;background:#fcf3eb}
+.forage-outcome-icon{display:block;font-size:35px;margin-bottom:10px}
+.forage-outcome h3{font-size:18px;color:#315f50;margin:0}
+.forage-outcome--fail h3{color:#925d4f}
+@keyframes forage-sway{from{transform:rotate(-6deg)}to{transform:rotate(7deg)}}
+@keyframes forage-gold{from{transform:translateY(0);opacity:.83}to{transform:translateY(-4px);opacity:1}}
+@keyframes forage-cta{from{box-shadow:0 0 0 0 #3b947241}to{box-shadow:0 0 0 5px #3b94720d}}
+@media(max-width:580px){.field-bush>span{font-size:clamp(12px,3.3vw,19px)}.forage-game{padding:14px}.forage-meter{height:47px}.forage-needle{height:61px}}
+@media(prefers-reduced-motion:reduce){.field-bush>span,.field-harvest-action{animation:none}.field-bush{transition:none}}

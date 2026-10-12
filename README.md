@@ -40,3 +40,15 @@ La versión web puede desplegarse en Netlify y abrirse mediante una WebView Andr
 ## Créditos
 
 Pokémon y las ilustraciones asociadas pertenecen a sus respectivos titulares. Esta aplicación no está afiliada con The Pokémon Company, Nintendo ni Game Freak.
+
+## Recolección de bayas (minijuego)
+
+Busca arbustos visibles (🫐 y 🌟) dentro del terreno, acércate hasta una casilla contigua y pulsa **E** o **Recolectar**. Detén el indicador móvil en el rango verde pulsando **Espacio** o **Detener aguja**. Las plantas normales requieren dos aciertos y toleran un fallo; las doradas exigen tres aciertos perfectos y se mueven más rápido.
+
+- Si fallas o abandonas, el arbusto se agota y **no recibes bayas**.
+- Los arbustos se recuperan tras 26 pasos válidos (normales) o 40 pasos (raros) **en la misma región**, conservando el estado al cerrar y abrir la aplicación.
+- Recompensas: arbusto normal 1–2 bayas; dorado 2–3. Capacidad: 25 bayas.
+- Los movimientos bloqueados no suman pasos y reabrir Safari no restaura los arbustos.
+- La reposición de Poké Balls al agotarse ya no entrega bayas gratuitas: deben recolectarse en el mapa.
+
+Los arbustos, la dificultad y las bayas son reglas diseñadas para esta actividad; **no son funcionalidades de PokéAPI**.

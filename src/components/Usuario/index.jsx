@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { displayName, pokemonSprite, TOTAL_POKEMON } from '../../utils/pokemon';
 
 export default function Usuario() {
-  const { perfil, favoritos, capturados, inventario, estadisticas, historial, setNombre, resetProgreso } = useApp();
+  const { perfil, favoritos, capturados, inventario, estadisticas, estadisticasBayas, historial, setNombre, resetProgreso } = useApp();
   const [name, setName] = useState(perfil.nombre);
   const [confirm, setConfirm] = useState(false);
   return <section>
@@ -14,7 +14,7 @@ export default function Usuario() {
       <article><span>✦ Expediciones</span><strong>{estadisticas.exploraciones}</strong><small>aventuras realizadas</small></article>
       <article><span>◉ Capturados</span><strong>{capturados.length}</strong><small>especies únicas</small></article>
       <article><span>♥ Favoritos</span><strong>{favoritos.length}</strong><small>en tu colección</small></article>
-      <article><span>⌁ Intentos</span><strong>{estadisticas.intentos}</strong><small>lanzamientos Safari</small></article>
+      <article><span>⌁ Intentos</span><strong>{estadisticas.intentos}</strong><small>lanzamientos Safari</small></article><article><span>🫐 Bayas recolectadas</span><strong>{estadisticasBayas.recolectadas}</strong><small>{estadisticasBayas.exitos} cosechas logradas / {estadisticasBayas.intentos} intentos</small></article>
     </div>
     <div className="dashboard-columns">
       <div className="panel"><div className="panel-header"><h2>Progreso Pokédex</h2><span>{Math.round(capturados.length / TOTAL_POKEMON * 100)}%</span></div><div className="progress-track"><div style={{ width: capturados.length / TOTAL_POKEMON * 100 + '%' }} /></div><p>{capturados.length} de {TOTAL_POKEMON} especies capturadas</p><Link to="/coleccion" className="text-link">Volver al Safari ↗</Link><div className="inventory-mini"><span>🔴 {inventario.pokeball} Poké Balls</span><span>🔵 {inventario.superball} Super Balls</span><span>🍓 {inventario.bayas} Bayas</span></div></div>
