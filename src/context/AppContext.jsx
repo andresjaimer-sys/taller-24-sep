@@ -10,6 +10,7 @@ const emptyState = {
   perfil: { nombre: 'Entrenador', regionPreferida: '' },
   estadisticas: { exploraciones: 0, intentos: 0, capturas: 0 },
   historial: [],
+  zonasVisitadas: [],
 };
 
 function readState() {
@@ -25,6 +26,7 @@ function readState() {
         favoritos: Array.isArray(saved.favoritos) ? saved.favoritos : [],
         capturados: Array.isArray(saved.capturados) ? saved.capturados : [],
         historial: Array.isArray(saved.historial) ? saved.historial : [],
+        zonasVisitadas: Array.isArray(saved.zonasVisitadas) ? saved.zonasVisitadas : [],
       };
     }
     const legacy = JSON.parse(localStorage.getItem('favoritos') || '[]');
@@ -60,8 +62,11 @@ export function AppProvider({ children }) {
     });
   };
 
-  const registrarExploracion = () => setState((previous) => ({
+  const registrarExploracion = (regionId) => setState((previous) => ({
     ...previous,
+    zonasVisitadas: regionId && !previous.zonasVisitadas.includes(regionId)
+      ? [...previous.zonasVisitadas, regionId]
+      : previous.zonasVisitadas,
     estadisticas: {
       ...previous.estadisticas,
       exploraciones: previous.estadisticas.exploraciones + 1,

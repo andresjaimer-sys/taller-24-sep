@@ -1,0 +1,29 @@
+
+/* Immersive expedition map and route briefing */
+.safari-map-layout{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(255px,.72fr);gap:18px;align-items:stretch}
+.safari-map-layout .atlas-shell{height:100%;display:flex;flex-direction:column}
+.safari-map-layout .atlas-world{flex:none;aspect-ratio:900/620;min-height:0}
+.safari-route-panel{border:1px solid #e4ece4;border-radius:23px;background:#fff;box-shadow:0 17px 42px #234a5210;padding:20px;display:flex;flex-direction:column;gap:16px}
+.safari-route-panel>.eyebrow{color:#70a08a}
+.safari-route-banner{position:relative;isolation:isolate;background:linear-gradient(140deg,#173c3d 4%,color-mix(in srgb,var(--region-color) 58%,#173c3d) 100%);border-radius:17px;min-height:194px;padding:18px;color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:end}
+.safari-route-banner:after{content:'✦';position:absolute;right:-3px;top:-42px;color:#ffffff15;font-size:160px;z-index:-1;line-height:1}
+.safari-route-emblem{display:grid;place-items:center;background:#ffffff23;border:1px solid #ffffff34;width:54px;height:54px;border-radius:15px;font-size:28px;margin-bottom:auto}
+.safari-route-coordinate{color:#c8f2dc;font-size:9px;font-weight:900;letter-spacing:1.5px;margin-top:10px}
+.safari-route-banner strong{font:850 25px/1.2 'Outfit',sans-serif;letter-spacing:-.5px;margin-top:5px}
+.safari-route-banner p{color:#e0ede4;font-size:11px;line-height:1.6;margin:7px 0 0}
+.safari-route-info strong{font-size:12px;color:#2d4c47;display:block;margin-bottom:9px}
+.safari-route-info>div{display:flex;gap:7px;flex-wrap:wrap}
+.safari-habitat-type{font-size:10px;font-weight:900;color:#43806d;background:#eaf6ef;border:1px solid #d8ebe0;border-radius:7px;padding:7px 12px}
+.safari-route-mission{background:#f5faf5;border:1px solid #e2f0e6;border-radius:15px;padding:15px}
+.safari-mission-head{display:flex;justify-content:space-between;gap:9px;align-items:center}
+.safari-mission-head span{color:#4b8f75;font-size:10px;letter-spacing:1px;font-weight:900}
+.safari-mission-head strong{color:#225d47;font:800 17px 'Outfit'}
+.safari-route-mission p{margin:10px 0 13px;font-size:11px;color:#7b998b;line-height:1.6}
+.safari-mission-track{width:100%;height:8px;border-radius:10px;overflow:hidden;background:#dcece0}
+.safari-mission-track span{height:100%;background:#4ea47b;display:block;border-radius:10px;transition:width .25s}
+.safari-route-mission small{font-size:10px;font-weight:800;color:#75a18c;display:block;margin-top:9px}
+.safari-embark-button{width:100%;background:#265c4e;color:#fff;margin-top:auto;min-height:51px;font-size:12px}
+.safari-route-hint{font-size:10px;color:#9cafaa;text-align:center;line-height:1.6}
+.encounter-zone{scroll-margin-top:22px}
+@media(max-width:1100px){.safari-map-layout{grid-template-columns:1fr}.safari-map-layout .atlas-world{aspect-ratio:900/620;min-height:0}.safari-route-panel{display:grid;grid-template-columns:1fr 1fr;gap:14px}.safari-route-panel>.eyebrow{grid-column:1/-1}.safari-route-banner{grid-row:span 3}.safari-route-hint{grid-column:1/-1}}
+@media(max-width:600px){.safari-map-layout{gap:13px}.safari-map-layout .atlas-world{min-height:0}.safari-route-panel{display:flex;padding:14px;gap:13px}.safari-route-banner{min-height:176px}.safari-route-emblem{width:45px;height:45px;font-size:24px}.safari-route-hint{font-size:9px}}
