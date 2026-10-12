@@ -27,3 +27,10 @@
 .encounter-zone{scroll-margin-top:22px}
 @media(max-width:1100px){.safari-map-layout{grid-template-columns:1fr}.safari-map-layout .atlas-world{aspect-ratio:900/620;min-height:0}.safari-route-panel{display:grid;grid-template-columns:1fr 1fr;gap:14px}.safari-route-panel>.eyebrow{grid-column:1/-1}.safari-route-banner{grid-row:span 3}.safari-route-hint{grid-column:1/-1}}
 @media(max-width:600px){.safari-map-layout{gap:13px}.safari-map-layout .atlas-world{min-height:0}.safari-route-panel{display:flex;padding:14px;gap:13px}.safari-route-banner{min-height:176px}.safari-route-emblem{width:45px;height:45px;font-size:24px}.safari-route-hint{font-size:9px}}
+
+
+/* Walkable Safari mode */
+.encounter-zone .field-shell{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+.encounter-zone .encounter-top{background:#fff}
+.field-result-buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:21px}
+.encounter-ready{min-height:245px}

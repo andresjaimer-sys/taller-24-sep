@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { displayName, pokemonArtwork, pokemonIdFromUrl, TOTAL_POKEMON } from '../../utils/pokemon';
 import { REGIONS, calculateCaptureChance, pickRandomPokemon, rarityLabel } from '../../utils/safariLogic';
 import SafariMap from './SafariMap';
+import SafariWorld from './SafariWorld';
 
 export default function Coleccion() {
   const { capturados, inventario, estadisticas, zonasVisitadas, registrarExploracion, registrarIntento, reabastecer } = useApp();
@@ -21,10 +22,22 @@ export default function Coleccion() {
   const [regionCache, setRegionCache] = useState({});
 
   useEffect(() => { setEncounter(null); setResult(''); setError(''); setPhase('ready'); }, [region.id]);
-  useEffect(() => { if (phase === 'encounter') encounterZoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [phase]);
+  useEffect(() => { if (phase === 'field' || phase === 'encounter') encounterZoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [phase]);
+
+  function startWalking() {
+    if (phase === 'loading') return;
+    setResult(''); setError(''); setEncounter(null); setBerry(false);
+    if (phase === 'ready') registrarExploracion(region.id);
+    setPhase('field');
+  }
+
+  function leaveWalking() {
+    if (phase === 'loading') return;
+    setPhase('ready'); setEncounter(null); setResult(''); setError('');
+  }
 
   async function explore() {
-    if (encounterLock.current || phase === 'loading') return;
+    if (encounterLock.current || phase !== 'field') return;
     encounterLock.current = true;
     setPhase('loading'); setError(''); setResult(''); setBerry(false);
     try {
@@ -51,11 +64,10 @@ export default function Coleccion() {
         id: detail.id, name: detail.name, types: detail.types.map((x) => x.type.name),
         captureRate: species.capture_rate, level: 5 + Math.floor(Math.random() * 36),
       });
-      registrarExploracion(region.id);
       setPhase('encounter');
     } catch {
       setError('La expedición no pudo comenzar. Comprueba tu conexión e inténtalo nuevamente.');
-      setPhase('ready');
+      setPhase('field');
     } finally {
       encounterLock.current = false;
     }
@@ -71,12 +83,12 @@ export default function Coleccion() {
     const success = Math.random() < chance;
     const already = capturados.some((p) => p.id === encounter.id);
     registrarIntento({ pokemon: encounter, exito: success, region: region.name, ball, usoBaya: berry });
-    setResult(success ? already ? '¡Captura lograda! Ya tenías esta especie en tu álbum.' : '¡Excelente! Este Pokémon se añadió a tu colección.' : '¡Se escapó! Puedes intentar otra expedición.');
+    setResult(success ? already ? '¡Captura lograda! Ya tenías esta especie en tu álbum.' : '¡Excelente! Este Pokémon se añadió a tu colección.' : '¡Se escapó! Regresa al sendero para seguir buscando.');
     setPhase('result');
     actionLock.current = false;
   }
 
-  function flee() { setResult('Decidiste retirarte sin realizar un lanzamiento.'); setPhase('result'); }
+  function flee() { setResult('Decidiste retirarte. Puedes continuar explorando la zona.'); setPhase('result'); }
   const chance = encounter ? Math.round(calculateCaptureChance(encounter.captureRate, ball, berry) * 100) : 0;
   const visibleAlbum = capturados.filter((p) => displayName(p.nombre).toLowerCase().includes(filter.toLowerCase()));
   const capturasDeRegion = capturados.filter((item) => item.region === region.name).length;
@@ -105,16 +117,17 @@ export default function Coleccion() {
           <div className="safari-mission-track"><span style={{ width: (objetivoRegion / 3 * 100) + '%' }} /></div>
           <small>{objetivoRegion === 3 ? '🏅 Misión completada' : zonasVisitadas.includes(region.id) ? '✓ Zona descubierta' : '○ Zona aún no explorada'}</small>
         </div>
-        <button type="button" className="button safari-embark-button" disabled={phase === 'loading'} onClick={explore}>{phase === 'loading' ? 'Buscando señales…' : '✦ Explorar esta región →'}</button>
+        <button type="button" className="button safari-embark-button" disabled={phase === 'loading'} onClick={startWalking}>{phase === 'loading' ? 'Hay un encuentro en curso…' : phase === 'field' ? '✦ Volver al sendero →' : '✦ Entrar a esta región →'}</button>
         <span className="safari-route-hint">Selecciona otro punto directamente en el mapa para cambiar de destino.</span>
       </aside>
     </div>
 
-    <div className="encounter-zone" ref={encounterZoneRef}><div className="encounter-top"><div><span className="eyebrow accent-text">ZONA DE ENCUENTROS</span><h2>{region.icon} {region.name}</h2><p>Especies relacionadas con {region.types.map(displayName).join(' y ')}.</p></div><span className="encounter-tag">{phase === 'encounter' ? '● POKÉMON SALVAJE' : 'MODO EXPLORACIÓN'}</span></div>
+    <div className="encounter-zone" ref={encounterZoneRef}><div className="encounter-top"><div><span className="eyebrow accent-text">SAFARI 2.0 · AVENTURA INTERACTIVA</span><h2>{region.icon} {region.name}</h2><p>Explora caminando: hierba alta, senderos y encuentros de {region.types.map(displayName).join(' y ')}.</p></div><span className="encounter-tag">{phase === 'encounter' ? '● POKÉMON SALVAJE' : phase === 'field' ? '● EXPLORANDO' : 'MODO AVENTURA'}</span></div>
+      {phase !== 'ready' && <div style={{ display: phase === 'field' ? 'block' : 'none' }}><SafariWorld key={region.id} region={region} active={phase === 'field'} onEncounter={explore} onExit={leaveWalking} /></div>}
       {phase === 'encounter' && encounter ? <div className="encounter-body">
         <div className="encounter-pokemon"><div className="encounter-spotlight" /><img src={pokemonArtwork(encounter.id)} alt={displayName(encounter.name)} /><span>#{String(encounter.id).padStart(4, '0')}</span></div>
         <div className="encounter-controls"><span className="eyebrow accent-text">¡UN POKÉMON SALVAJE!</span><h3>{displayName(encounter.name)}</h3><div className="encounter-facts"><span>Nivel simulado {encounter.level}</span><span>{rarityLabel(encounter.captureRate)}</span></div><p>Elige tus recursos para aumentar tu probabilidad simulada de captura.</p><fieldset className="ball-options"><legend>Selecciona una Poké Ball</legend><label><input type="radio" name="ball" checked={ball === 'pokeball'} onChange={() => setBall('pokeball')} disabled={!inventario.pokeball} /> 🔴 Poké Ball ({inventario.pokeball})</label><label><input type="radio" name="ball" checked={ball === 'superball'} onChange={() => setBall('superball')} disabled={!inventario.superball} /> 🔵 Super Ball ({inventario.superball})</label></fieldset><label className="berry-option"><input type="checkbox" checked={berry} onChange={(e) => setBerry(e.target.checked)} disabled={!inventario.bayas} /> 🍓 Usar baya ({inventario.bayas})</label><div className="chance-row"><span>Probabilidad estimada</span><strong>{chance}%</strong></div><div className="chance-track"><div style={{ width: chance + '%' }} /></div><div className="encounter-actions"><button className="button button-primary" type="button" onClick={capture} disabled={!inventario[ball] || (berry && !inventario.bayas)}>◉ Lanzar Poké Ball</button><button className="button button-outline" type="button" onClick={flee}>Huir</button></div></div>
-      </div> : <div className="encounter-ready"><span className="encounter-ready-icon">{phase === 'result' ? '✧' : '◉'}</span><h3>{phase === 'loading' ? 'Buscando señales en el hábitat…' : phase === 'result' ? result : 'Tu próxima aventura está en el mapa'}</h3><p>{phase === 'result' ? 'Cada encuentro es una nueva oportunidad.' : 'Elige un destino en Isla Aurora. Cada expedición te lleva a un encuentro salvaje.'}</p><button className="button button-primary" disabled={phase === 'loading'} onClick={explore} type="button">{phase === 'loading' ? 'Explorando…' : phase === 'result' ? '✦ Nueva expedición' : '✦ Iniciar expedición'}</button></div>}
+      </div> : phase === 'loading' ? <div className="encounter-ready"><span className="encounter-ready-icon">✧</span><h3>¡Se mueve algo en la hierba!</h3><p>Consultando los datos de la especie en PokéAPI…</p></div> : phase === 'result' ? <div className="encounter-ready"><span className="encounter-ready-icon">◉</span><h3>{result}</h3><p>Tu entrenador conserva su posición. Sigue caminando para descubrir más Pokémon.</p><div className="field-result-buttons"><button type="button" className="button button-primary" onClick={() => { setEncounter(null); setPhase('field'); }}>↗ Continuar explorando</button><button type="button" className="button button-outline" onClick={leaveWalking}>Volver al mapa</button></div></div> : phase === 'ready' ? <div className="encounter-ready"><span className="encounter-ready-icon">🧢</span><h3>¿Preparado para entrar en la región?</h3><p>Selecciona un destino en el mapa, mueve al entrenador con las flechas o WASD y busca encuentros entre la hierba alta.</p><button className="button button-primary" onClick={startWalking} type="button">✦ Comenzar aventura a pie</button></div> : null}
       {error && <p className="safari-error" role="alert">{error}</p>}
       {inventario.pokeball + inventario.superball === 0 && <div className="restock"><p>Tu inventario de Poké Balls está vacío.</p><button type="button" className="button button-outline" onClick={reabastecer}>Reabastecer recursos</button></div>}
     </div>
