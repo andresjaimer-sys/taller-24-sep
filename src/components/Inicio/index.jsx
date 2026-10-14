@@ -1,86 +1,125 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './style.css';
 
-import './style.css'
+const tipos = [
+  'All', 'normal', 'fighting', 'flying', 'poison', 'ground', 'rock',
+  'bug', 'ghost', 'steel', 'fire', 'water', 'grass', 'electric',
+  'psychic', 'ice', 'dragon', 'dark', 'fairy', 'stellar', 'shadow', 'unknown'
+];
 
-function Inicio() {
+function idPokemon(url) {
+  const match = String(url).match(/\/pokemon\/(\d+)\/?$/);
+  return match ? Number(match[1]) : null;
+}
 
+export default function Inicio() {
   const navigate = useNavigate();
-  const [todoslospokes, setTodoslospokes] = useState([]);
+  const [pokemones, setPokemones] = useState([]);
+  const [tipo, setTipo] = useState('All');
   const [busqueda, setBusqueda] = useState('');
-  const [tipopoke, setTipopoke] = useState('All')
-  
-  let resultados = todoslospokes;
-
-  if (busqueda.length >= 3 && isNaN(busqueda)) {
-    resultados = todoslospokes.filter(pokemon =>
-      pokemon.name.toLowerCase().includes(busqueda.toLowerCase())
-    );
-  }
-
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const cargarPokemons = async () => {
+    const controlador = new AbortController();
+    async function cargar() {
+      setCargando(true);
+      setError('');
       try {
-        if (tipopoke === 'All') {
-          const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025')
-          const responseData = await response.json()
-          setTodoslospokes(responseData.results ?? [])
-          return
-        }
-
-        const response = await fetch(`https://pokeapi.co/api/v2/type/${tipopoke}`)
-        const responseData = await response.json()
-        const mascotas = responseData.pokemon?.map((entry) => entry.pokemon) ?? []
-        setTodoslospokes(mascotas)
-      } catch (error) {
-        console.error('Error:', error)
+        const url = tipo === 'All'
+          ? 'https://pokeapi.co/api/v2/pokemon?limit=1025'
+          : 'https://pokeapi.co/api/v2/type/' + tipo;
+        const respuesta = await fetch(url, { signal: controlador.signal });
+        if (!respuesta.ok) throw new Error('No se pudo consultar PokéAPI');
+        const data = await respuesta.json();
+        const lista = tipo === 'All'
+          ? (data.results || [])
+          : (data.pokemon || []).map((item) => item.pokemon);
+        setPokemones(lista.filter((p) => idPokemon(p.url) !== null));
+      } catch (err) {
+        if (err.name !== 'AbortError') setError('No se pudieron cargar los Pokémon. Comprueba tu conexión.');
+      } finally {
+        if (!controlador.signal.aborted) setCargando(false);
       }
     }
+    cargar();
+    return () => controlador.abort();
+  }, [tipo]);
 
-    cargarPokemons()
-  }, [tipopoke])
-  
-     const tipos = [
-    'All',
-    'normal', 'fighting', 'flying', 'poison', 'ground', 'rock',
-    'bug', 'ghost', 'steel', 'fire', 'water', 'grass', 'electric',
-    'psychic', 'ice', 'dragon', 'dark', 'fairy', 'stellar', 'shadow', 'unknown'
-  ]
+  const resultados = useMemo(() => {
+    const texto = busqueda.trim().toLowerCase();
+    if (!texto) return pokemones;
+    return pokemones.filter((p) => (
+      p.name.toLowerCase().includes(texto) || String(idPokemon(p.url)) === texto
+    ));
+  }, [busqueda, pokemones]);
 
-     if (todoslospokes.length === 0) {
-    return <p>Cargando...</p>;
-  }
   return (
-    <> 
-     <div className="c-filtro">
-        {tipos.map((unTipo, index) => (
-          <button type="button" key={index} onClick={() => setTipopoke(unTipo)}>
-            {unTipo}
+    <div>
+      <p className="pagina-etiqueta">Tu aventura comienza aquí</p>
+      <h1 className="pagina-titulo">Explora la Pokédex</h1>
+      <p className="pagina-descripcion">Busca entre 1.025 Pokémon, filtra por tipo y descubre sus estadísticas.</p>
+
+      <div className="buscador-panel">
+        <label htmlFor="buscar-pokemon">Buscar Pokémon</label>
+        <input
+          id="buscar-pokemon"
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="c-buscador"
+          placeholder="Nombre o número, por ejemplo Pikachu"
+        />
+      </div>
+
+      <div className="filtros-titulo">
+        <strong>Filtrar por tipo</strong>
+        <span>{cargando ? 'Cargando…' : resultados.length + ' resultados'}</span>
+      </div>
+      <div className="c-filtro" aria-label="Tipos de Pokémon">
+        {tipos.map((unTipo) => (
+          <button
+            type="button"
+            key={unTipo}
+            onClick={() => setTipo(unTipo)}
+            className={tipo === unTipo ? 'filtro-boton seleccionado' : 'filtro-boton'}
+            aria-pressed={tipo === unTipo}
+          >
+            {unTipo === 'All' ? 'Todos' : unTipo}
           </button>
         ))}
       </div>
-        <input
-        type="text"
-        placeholder="Buscar Pokémon"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        className="c-buscador"
-      />
-    <div className="c-lista">
-    {resultados.map((pokemon) => (
-      <div className='c-lista-pokemon'
-       onClick={() => navigate(`/pokemon/${pokemon.name}`)}
-      >
-        <p>{pokemon.url.split("/")[6]}</p>
-        <p key={pokemon.name}>{pokemon.name}</p>
-          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.url.split("/")[6]}.png`} 
-          alt={`Pokémon ${pokemon.name}`} width='auto' height='60' loading='lazy'
-        />
-      </div>
-    ))}
-    </div></>
-  )
-}
 
-export default Inicio
+      {cargando ? (
+        <p className="estado">Cargando Pokémon…</p>
+      ) : error ? (
+        <p className="estado">{error}</p>
+      ) : resultados.length === 0 ? (
+        <p className="estado">No encontramos Pokémon con esos filtros.</p>
+      ) : (
+        <section className="c-lista" aria-label="Lista de Pokémon">
+          {resultados.map((pokemon) => {
+            const id = idPokemon(pokemon.url);
+            return (
+              <button
+                type="button"
+                className="c-lista-pokemon"
+                key={pokemon.name}
+                onClick={() => navigate('/pokemon/' + pokemon.name)}
+              >
+                <span className="pokemon-numero">#{String(id).padStart(4, '0')}</span>
+                <img
+                  src={'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + id + '.png'}
+                  alt={pokemon.name}
+                  loading="lazy"
+                />
+                <span className="pokemon-nombre">{pokemon.name}</span>
+              </button>
+            );
+          })}
+        </section>
+      )}
+    </div>
+  );
+}
