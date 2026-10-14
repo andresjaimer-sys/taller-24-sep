@@ -36,7 +36,6 @@ function Pokemon() {
     if (!datapoke || !datapoke.id) return <p>Cargando...</p>;
     return (
         <div>
-        <p>{datapoke.id}</p>
         <h1>{datapoke.name}</h1>
         <img 
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${datapoke.id}.png`} 
