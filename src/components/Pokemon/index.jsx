@@ -1,106 +1,63 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import './style.css';
+import { useParams } from "react-router-dom"; 
+import { useState, useEffect } from 'react'
+import './style.css'
 
-const artwork = (id) => 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + id + '.png';
+function Pokemon() {
+    const { name } = useParams(); 
+    const [datapoke, setDatapoke] = useState([]);
+    const [favoritos, setFavoritos] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('favoritos') || '[]');
+        } catch {
+            return [];
+        }
+    });
+    const esFavorito = favoritos.some(p => p.id === datapoke.id);
 
-function leerFavoritos() {
-  try {
-    const datos = JSON.parse(localStorage.getItem('favoritos') || '[]');
-    return Array.isArray(datos) ? datos : [];
-  } catch {
-    return [];
-  }
+
+    useEffect(() => {
+    fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+      .then(response => response.json())
+      .then(responseData => setDatapoke(responseData))
+      .catch(error => console.error("Error:", error));
+    }, [name]); 
+
+    const toggleFavorito = () => {
+        let nuevosFavoritos;
+        if (esFavorito) {
+        nuevosFavoritos = favoritos.filter(p => p.id !== datapoke.id);
+        } else {
+        nuevosFavoritos = [...favoritos, { id: datapoke.id, nombre: datapoke.name }];
+        }
+        setFavoritos(nuevosFavoritos);
+        localStorage.setItem('favoritos', JSON.stringify(nuevosFavoritos));
+    };
+    
+    if (!datapoke || !datapoke.id) return <p>Cargando...</p>;
+    return (
+        <div>
+        <p>{datapoke.id}</p>
+        <h1>{datapoke.name}</h1>
+        <img 
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${datapoke.id}.png`} 
+            alt={datapoke.name} 
+            width="200"
+        />
+
+        <p>{datapoke.id}</p>
+        <p>Altura: {datapoke.height/ 10} m / Peso: {datapoke.weight/ 10} kg</p>
+
+        <p>hp: {datapoke.stats[0].base_stat}</p>
+        <p>Velocidad: {datapoke.stats[5].base_stat}</p>
+        <p>Ataque: {datapoke.stats[1].base_stat} Defensa: {datapoke.stats[2].base_stat}</p>
+        <p>Ataque Especial: {datapoke.stats[3].base_stat} Defensa Especial: {datapoke.stats[4].base_stat}</p>
+
+
+            <button onClick={toggleFavorito}>
+            {esFavorito ? '❤️' : '🤍'}
+            </button>
+        </div>
+    )
 }
 
-export default function Pokemon() {
-  const { name } = useParams();
-  const navigate = useNavigate();
-  const [pokemon, setPokemon] = useState(null);
-  const [favoritos, setFavoritos] = useState(leerFavoritos);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const controlador = new AbortController();
-    setPokemon(null);
-    setError('');
-    fetch('https://pokeapi.co/api/v2/pokemon/' + encodeURIComponent(name), { signal: controlador.signal })
-      .then((respuesta) => {
-        if (!respuesta.ok) throw new Error('Pokémon no encontrado');
-        return respuesta.json();
-      })
-      .then((datos) => setPokemon(datos))
-      .catch((e) => {
-        if (e.name !== 'AbortError') setError('No fue posible cargar este Pokémon.');
-      });
-    return () => controlador.abort();
-  }, [name]);
-
-  function alternarFavorito() {
-    if (!pokemon) return;
-    const existe = favoritos.some((p) => p.id === pokemon.id);
-    const nuevos = existe
-      ? favoritos.filter((p) => p.id !== pokemon.id)
-      : [...favoritos, { id: pokemon.id, nombre: pokemon.name }];
-    setFavoritos(nuevos);
-    try {
-      localStorage.setItem('favoritos', JSON.stringify(nuevos));
-    } catch (e) {
-      console.error('No se pudieron guardar los favoritos:', e);
-    }
-  }
-
-  if (error) return <p className="estado">{error}</p>;
-  if (!pokemon) return <p className="estado">Cargando Pokémon…</p>;
-
-  const esFavorito = favoritos.some((p) => p.id === pokemon.id);
-  const nombresStats = {
-    hp: 'PS',
-    attack: 'Ataque',
-    defense: 'Defensa',
-    'special-attack': 'Ataque especial',
-    'special-defense': 'Defensa especial',
-    speed: 'Velocidad',
-  };
-
-  return (
-    <div className="detalle">
-      <button type="button" className="detalle-volver" onClick={() => navigate(-1)}>← Volver</button>
-      <div className="detalle-panel">
-        <div className="detalle-arte">
-          <p>#{String(pokemon.id).padStart(4, '0')}</p>
-          <img src={artwork(pokemon.id)} alt={pokemon.name} />
-        </div>
-        <div className="detalle-informacion">
-          <p className="pagina-etiqueta">Ficha del Pokémon</p>
-          <h1 className="pagina-titulo detalle-nombre">{pokemon.name}</h1>
-          <div className="detalle-tipos">
-            {pokemon.types.map(({ type }) => <span key={type.name}>{type.name}</span>)}
-          </div>
-          <div className="detalle-medidas">
-            <div><strong>{pokemon.height / 10} m</strong><span>Altura</span></div>
-            <div><strong>{pokemon.weight / 10} kg</strong><span>Peso</span></div>
-          </div>
-          <button
-            type="button"
-            onClick={alternarFavorito}
-            className={esFavorito ? 'detalle-favorito guardado' : 'detalle-favorito'}
-            aria-pressed={esFavorito}
-          >
-            {esFavorito ? '♥ Quitar de favoritos' : '♡ Añadir a favoritos'}
-          </button>
-          <h2>Estadísticas base</h2>
-          <div className="detalle-stats">
-            {pokemon.stats.map(({ base_stat, stat }) => (
-              <div className="detalle-stat" key={stat.name}>
-                <span>{nombresStats[stat.name] || stat.name}</span>
-                <div className="detalle-stat-barra"><i style={{ width: Math.min(100, base_stat / 255 * 100) + '%' }} /></div>
-                <strong>{base_stat}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+export default Pokemon
